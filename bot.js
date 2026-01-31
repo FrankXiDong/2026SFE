@@ -1,4 +1,5 @@
 const { Mwn } = require('mwn');
+const fs = require('fs');
 const config = require('./config');
 const utils = require('./utils');
 const pc = require('picocolors');
@@ -110,8 +111,10 @@ async function main() {
             // 检查并更新用户的贡献页头部信息
             const newContent = utils.updateUserPageContent(wikitext, entryCount, totalScore);
             
+            let isUpdated = false;
             // 如果内容有变化（统计数据更新），则写入页面
             if (newContent !== wikitext) {
+                isUpdated = true;
                 console.log(pc.yellow(`[ACTION] 更新页面 ${username}: 条目数=${entryCount}, 得分=${totalScore}`));
                 await bot.save(page.title, newContent, 'bot: 更新贡献状态统计 (2026新春编辑马拉松)');
                 // 礼貌延时：避免短时间大量写入请求，保护弱 API
@@ -130,7 +133,8 @@ async function main() {
                 entryCount,
                 totalScore,
                 isVeteran,
-                pageTitle: page.title
+                pageTitle: page.title,
+                isUpdated
             });
 
         } catch (err) {
@@ -140,6 +144,10 @@ async function main() {
 
     // 4. 更新总排行榜
     await updateLeaderboard(bot, participants);
+
+    if (process.env.GITHUB_STEP_SUMMARY) {
+        generateGithubSummary(participants);
+    }
 }
 
 /**
@@ -278,6 +286,47 @@ function replaceTableContent(fullText, sectionName, newRows) {
     const postTable = fullText.substring(tableEndIndex);
     
     return `${preTable}${tableHead}${newRows}\n${postTable}`;
+}
+
+function generateGithubSummary(participants) {
+    const summaryFile = process.env.GITHUB_STEP_SUMMARY;
+    if (!summaryFile) return;
+
+    const totalParticipants = participants.length;
+    const updatedCount = participants.filter(p => p.isUpdated).length;
+    const totalEntries = participants.reduce((sum, p) => sum + p.entryCount, 0);
+    const totalScore = participants.reduce((sum, p) => sum + p.totalScore, 0);
+
+    const headers = ['用户', '条目数', '得分', '资历', '状态'];
+    const rows = participants.sort((a,b) => b.totalScore - a.totalScore).map(p => [
+        p.username,
+        p.entryCount,
+        p.totalScore,
+        p.isVeteran ? '✅' : '🆕',
+        p.isUpdated ? '📝 已更新' : '无变化'
+    ]);
+
+    let markdown = `## 2026年春节编辑松机器人运行摘要 🚀\n\n`;
+    markdown += `- **参与总人数**: ${totalParticipants}\n`;
+    markdown += `- **本次更新页面数**: ${updatedCount}\n`;
+    markdown += `- **总条目数**: ${totalEntries}\n`;
+    markdown += `- **总得分**: ${totalScore}\n\n`;
+
+    markdown += `### 参与者详情\n\n`;
+    markdown += `| ${headers.join(' | ')} |\n`;
+    markdown += `| ${headers.map(() => '---').join(' | ')} |\n`;
+    
+    rows.forEach(row => {
+        markdown += `| ${row.join(' | ')} |\n`;
+    });
+    
+    markdown += `\n摘要生成于 ${new Date().toISOString()}`;
+
+    try {
+        fs.appendFileSync(summaryFile, markdown);
+    } catch (error) {
+        console.error('Error writing to GITHUB_STEP_SUMMARY:', error);
+    }
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
