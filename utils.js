@@ -33,7 +33,7 @@ function parseContributionPage(wikitext) {
             // 模板格式: {{2026FSEditasonStatus|状态|分数(可选)}}
             // 例如: {{2026FSEditasonStatus|pass|5}} 或 {{2026FSEditasonStatus|pass|11.3}}
             // 修改正则：允许匹配小数 ([\d.]+)
-            const statusRegex = /\{\{2026FSEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g;
+            const statusRegex = /\{\{2026SFEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g;
             let match;
             while ((match = statusRegex.exec(line)) !== null) {
                 // 每发现一个状态模板，视为一行有效条目
