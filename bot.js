@@ -208,6 +208,9 @@ async function updateLeaderboard(bot, participants) {
         const veteranRows = generateRows(veterans);
         const newStarRows = generateRows(newStars);
 
+        // 更新时间戳
+        content = updateTimestamp(content);
+
         // 替换页面中的表格内容
         // 注意：这种正则/字符串替换策略依赖于页面结构保持稳定（{{FakeH3|...}} 标题存在）
         content = replaceTableContent(content, '熟练编者排行榜', veteranRows);
@@ -219,6 +222,55 @@ async function updateLeaderboard(bot, participants) {
 
     } catch (err) {
         console.error(pc.red('[ERROR] 更新总排行榜失败:'), err);
+    }
+}
+
+/**
+ * 更新页面中的时间戳
+ * 在"（以下排行约每小时更新一次）"之后添加最近更新时间
+ */
+function updateTimestamp(content) {
+    // 获取当前时间（UTC+8）
+    const now = new Date();
+    const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    
+    // 格式化时间：xxxx年xx月xx日 xx:xx:xx UTC+8
+    const year = utc8Time.getUTCFullYear();
+    const month = String(utc8Time.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(utc8Time.getUTCDate()).padStart(2, '0');
+    const hours = String(utc8Time.getUTCHours()).padStart(2, '0');
+    const minutes = String(utc8Time.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(utc8Time.getUTCSeconds()).padStart(2, '0');
+    
+    const timestamp = `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds} UTC+8`;
+    const timestampLine = `{{center|（最近更新：${timestamp}）}}`;
+    
+    // 查找"（以下排行约每小时更新一次）"的位置
+    const targetText = '{{center|（以下排行约每小时更新一次）}}';
+    const targetIndex = content.indexOf(targetText);
+    
+    if (targetIndex === -1) {
+        console.log(pc.yellow('[WARN] 未找到更新提示文本，跳过时间戳更新'));
+        return content;
+    }
+    
+    // 查找目标文本之后的下一行
+    const afterTarget = targetIndex + targetText.length;
+    const nextLineStart = content.indexOf('\n', afterTarget) + 1;
+    
+    // 检查是否已存在时间戳行
+    const existingTimestampPattern = /\{\{center\|（最近更新：.*?\）\}\}/;
+    const contentAfterTarget = content.substring(nextLineStart);
+    const timestampMatch = contentAfterTarget.match(existingTimestampPattern);
+    
+    if (timestampMatch && contentAfterTarget.indexOf(timestampMatch[0]) < 100) {
+        // 如果已存在时间戳（在目标文本后100个字符内），则替换它
+        const oldTimestampIndex = nextLineStart + contentAfterTarget.indexOf(timestampMatch[0]);
+        const oldTimestampEnd = oldTimestampIndex + timestampMatch[0].length;
+        return content.substring(0, oldTimestampIndex) + timestampLine + content.substring(oldTimestampEnd);
+    } else {
+        // 如果不存在，则插入新的时间戳行
+        return content.substring(0, nextLineStart) + timestampLine + '\n' + content.substring(nextLineStart);
     }
 }
 
