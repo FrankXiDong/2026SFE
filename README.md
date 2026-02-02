@@ -37,3 +37,11 @@ node bot.js
 
 ### GitHub Actions
 本项目包含自动工作流 `.github/workflows/bot-run.yml`，请在 GitHub 仓库的 Secrets 中配置对应的环境变量即可自动定时运行。
+
+## 许可协议
+
+本项目采用 [MIT License](LICENSE) 开源许可协议。
+
+## 声明
+
+本仓库代码包含 GitHub Copilot 生成内容。
