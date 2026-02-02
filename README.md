@@ -35,7 +35,7 @@
 ### 本地运行
 #### 更新排行榜和总得分
 ```bash
-node bot.js
+node HYYY_bot.js
 ```
 #### 获取待审核列表
 ```bash
