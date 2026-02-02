@@ -137,7 +137,7 @@ async function updatePagesFromJson(bot) {
             bot, 
             pageData.title, 
             pageData.items, 
-            pageData.summary || 'bot: 批量更新审核状态 (2026春节编辑松)'
+            pageData.summary || '快速更新审核状态 (2026春节编辑松审核小工具)'
         );
     }
     
@@ -399,7 +399,7 @@ async function updateLeaderboard(bot, participants) {
         content = replaceTableContent(content, '新星编者排行榜', newStarRows);
 
         // 写入更新后的排行榜
-        await bot.save(leaderboardTitle, content, 'bot: 更新排行榜数据 (2026春节编辑松)');
+        await bot.save(leaderboardTitle, content, '更新排行榜');
         console.log(pc.green('[SUCCESS] 总排行榜已更新。'));
 
     } catch (err) {

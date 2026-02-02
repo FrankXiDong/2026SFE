@@ -96,6 +96,18 @@
     "summary": "bot: 批量更新审核状态 (2026春节编辑松)"
   },
   {
+    "title": "Qiuwen:2026年春节编辑松/提交/キイロピタヤ的贡献",
+    "items": [
+      {
+        "newStatus": "pending",
+        "newScore": "",
+        "status": "pending",
+        "score": ""
+      }
+    ],
+    "summary": "bot: 批量更新审核状态 (2026春节编辑松)"
+  },
+  {
     "title": "Qiuwen:2026年春节编辑松/提交/冀有陉鲜事儿②的贡献",
     "items": [
       {
@@ -129,6 +141,6 @@
         "score": ""
       }
     ],
-    "summary": "bot: 批量更新审核状态 (2026春节编辑松)"
+    "summary": "更新审核状态 (2026春节编辑松小工具)"
   }
 ]

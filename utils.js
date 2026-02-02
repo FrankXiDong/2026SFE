@@ -66,6 +66,7 @@ function parseContributionPage(wikitext) {
 /**
  * 解析用户的贡献页面 Wikitext 代码，返回详细信息
  * 包括每个项目的原始行、状态、分数和位置
+ * 现在返回完整表格行的信息，包括条目名称
  */
 function parseContributionPageWithDetails(wikitext) {
     const items = [];
@@ -81,7 +82,7 @@ function parseContributionPageWithDetails(wikitext) {
     let inTable = false;
     let currentLineNumber = 0;
     
-    for (const line of lines) {
+    for (const [idx, line] of lines.entries()) {
         // 检测表格开始
         if (line.trim().startsWith('{|')) {
             inTable = true;
@@ -92,8 +93,7 @@ function parseContributionPageWithDetails(wikitext) {
         if (line.trim().startsWith('|}')) {
             inTable = false;
             currentLineNumber++;
-            // 假设我们只关心第一个主要表格，或者全部表格都算（通常只有一个贡献表）
-            // 如果有多个表格，可能需要更精细的逻辑
+            continue;
         }
         
         if (inTable) {
@@ -103,14 +103,26 @@ function parseContributionPageWithDetails(wikitext) {
                 continue;
             }
 
-            // 使用正则查找状态模板
+            // 查找条目名称（通常是表格行的第一列，即 | 符号后的文本）
+            let entryName = '';
+            const pipeSplit = line.split('|');
+            if (pipeSplit.length >= 2) {
+                // 第一个分割项可能是空的（如果行以 | 开头），所以取第二个
+                entryName = pipeSplit[1] ? pipeSplit[1].trim() : '';
+                // 清理可能的标记如 '!' 或其他内容
+                if (entryName.startsWith('!')) {
+                    entryName = entryName.substring(1).trim();
+                }
+            }
+
+            // 使用正则查找状态模板，同时记录在行中的位置
             // 模板格式: {{2026SFEditasonStatus|状态|分数(可选)}}
             // 例如: {{2026SFEditasonStatus|pass|5}} 或 {{2026SFEditasonStatus|pass|11.3}}
-            // 修改正则：允许匹配小数 ([\d.]+)
             const statusRegex = /\{\{2026SFEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g;
             let match;
             let lineCopy = line; // 复制行内容用于查找匹配位置
             let lastIndex = 0;
+            let templateIndex = 0; // 记录当前行中模板的索引
             
             while ((match = statusRegex.exec(lineCopy)) !== null) {
                 // 每发现一个状态模板，视为一行有效条目
@@ -120,9 +132,9 @@ function parseContributionPageWithDetails(wikitext) {
                 const status = match[1] || ''; // 状态参数
                 const score = match[3] || ''; // 分数参数（如果有）
                 
-                // 计算模板在行中的位置
-                const templatePositionInLine = line.indexOf(originalMatch, lastIndex);
-                lastIndex = templatePositionInLine + originalMatch.length;
+                // 计算模板在全文中的绝对位置
+                const absolutePosition = cleanedWikitext.indexOf(originalMatch, line.indexOf(originalMatch, lastIndex));
+                lastIndex = line.indexOf(originalMatch, lastIndex) + originalMatch.length;
                 
                 // 如果有分数，累加到总分
                 if (score) {
@@ -133,13 +145,17 @@ function parseContributionPageWithDetails(wikitext) {
                     }
                 }
                 
-                // 添加项目到列表
+                // 添加项目到列表，包含条目名称和行号
                 items.push({
                     originalLine: line.trim(),
+                    entryName: entryName, // 条目名称
                     status: status,
                     score: score,
-                    position: templatePositionInLine,
-                    lineNumber: currentLineNumber
+                    absolutePosition: absolutePosition,  // 在整个文档中的绝对位置
+                    relativePosition: line.indexOf(originalMatch), // 在行内的相对位置
+                    lineNumber: idx, // 行号
+                    originalTemplate: originalMatch, // 完整的原始模板字符串
+                    templateIndex: templateIndex++ // 当前行中模板的索引
                 });
             }
         }
@@ -151,27 +167,55 @@ function parseContributionPageWithDetails(wikitext) {
 
 /**
  * Updates the page content with updated templates
+ * 使用更精确的替换方法，基于行号和模板索引，确保模板替换准确无误
  */
 function updatePageContentWithTemplates(originalWikitext, updatedItems) {
-    let updatedWikitext = originalWikitext;
-    
-    // 按位置倒序排列，以避免替换时影响后续位置
-    const sortedItems = updatedItems.sort((a, b) => b.position - a.position);
-    
-    for (const item of sortedItems) {
-        // 创建新的模板字符串
-        let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
-        if (item.newScore && item.newStatus === 'pass') {
-            newTemplate += `|${item.newScore}`;
+    // 按行分割文本，逐行处理
+    const lines = originalWikitext.split('\n');
+    const processedLines = [...lines]; // 复制数组以避免修改原数组
+
+    // 按行号分组更新项，确保同一条目的多个模板能被正确处理
+    const itemsByLine = {};
+    updatedItems.forEach(item => {
+        if (!itemsByLine[item.lineNumber]) {
+            itemsByLine[item.lineNumber] = [];
         }
-        newTemplate += '}}';
-        
-        // 替换原始模板
-        const originalTemplate = `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
-        updatedWikitext = updatedWikitext.replace(originalTemplate, newTemplate);
+        itemsByLine[item.lineNumber].push(item);
+    });
+
+    // 遍历每一行，替换其中的模板
+    for (const [lineNumStr, lineItems] of Object.entries(itemsByLine)) {
+        const lineNum = parseInt(lineNumStr);
+        if (lineNum < processedLines.length) {
+            let currentLine = processedLines[lineNum];
+            
+            // 按模板索引排序，确保替换顺序正确
+            lineItems.sort((a, b) => (a.templateIndex || 0) - (b.templateIndex || 0));
+            
+            // 遍历当前行的所有模板更新项，按顺序替换
+            for (const item of lineItems) {
+                // 创建新的模板字符串
+                let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
+                if (item.newScore !== undefined && item.newScore !== null && item.newStatus === 'pass') {
+                    newTemplate += `|${item.newScore}`;
+                }
+                newTemplate += '}}';
+
+                // 找到原始模板在当前行中的位置并替换（只替换第一个匹配项，以避免误替换其他相同模板）
+                const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
+                const pos = currentLine.indexOf(originalTemplate);
+                if (pos !== -1) {
+                    currentLine = currentLine.substring(0, pos) + newTemplate + currentLine.substring(pos + originalTemplate.length);
+                }
+            }
+
+            // 更新行内容
+            processedLines[lineNum] = currentLine;
+        }
     }
-    
-    return updatedWikitext;
+
+    // 重新组合所有行
+    return processedLines.join('\n');
 }
 
 /**

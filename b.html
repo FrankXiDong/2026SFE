@@ -282,9 +282,12 @@
     <script>
         let templates = [];
         let currentPageTitle = '';
+        let originalWikitext = '';
         
         function parseTemplates() {
             const input = document.getElementById('wikitextInput').value;
+            originalWikitext = input; // 保存原始wikitext
+            
             if (!input.trim()) {
                 alert('请输入 Wikitext 内容');
                 return;
@@ -293,11 +296,14 @@
             // 清理注释（类似 utils.js 中的处理）
             const cleanedInput = input.replace(/<!--[\s\S]*?-->/g, '');
             
+            // 按行分割文本，用于查找条目名称
+            const lines = cleanedInput.split('\n');
+            
             // 正则表达式匹配 {{2026SFEditasonStatus|状态|分数}} 模板
             const statusRegex = /\{\{2026SFEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g;
             let match;
             templates = [];
-            let lastIndex = 0;
+            let position = 0;
             
             while ((match = statusRegex.exec(cleanedInput)) !== null) {
                 const fullMatch = match[0];
@@ -305,39 +311,64 @@
                 const score = match[3] || '';
                 
                 // 找到匹配项在整个文本中的位置
-                const position = match.index;
+                const absolutePosition = match.index;
+                
+                // 找到模板所在的行号
+                let currentPos = 0;
+                let lineNumber = 0;
+                let targetLine = '';
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const lineEnd = currentPos + lines[i].length + 1; // +1 for newline character
+                    
+                    if (absolutePosition >= currentPos && absolutePosition < lineEnd) {
+                        lineNumber = i;
+                        targetLine = lines[i].trim();
+                        break;
+                    }
+                    
+                    currentPos = lineEnd;
+                }
+                
+                // 查找条目名称（通常是表格行的第一列，即 | 符号后的文本）
+                let entryName = '';
+                const pipeSplit = targetLine.split('|');
+                if (pipeSplit.length >= 2) {
+                    // 第一个分割项可能是空的（如果行以 | 开始），所以取第二个
+                    entryName = pipeSplit[1] ? pipeSplit[1].trim() : '';
+                    // 清理可能的标记如 '!' 或其他内容
+                    if (entryName.startsWith('!')) {
+                        entryName = entryName.substring(1).trim();
+                    }
+                }
+                
+                // 计算当前行中这是第几个模板
+                const lineTemplates = targetLine.match(/\{\{2026SFEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g) || [];
+                let templateIndex = 0;
+                for (let i = 0; i < lineTemplates.length; i++) {
+                    if (targetLine.indexOf(fullMatch) >= targetLine.indexOf(lineTemplates[i])) {
+                        templateIndex = i;
+                    }
+                }
                 
                 templates.push({
                     original: fullMatch,
                     status: status.trim(),
                     score: score.trim(),
-                    position: position,
-                    id: templates.length,
-                    originalLine: findOriginalLine(cleanedInput, position)
+                    absolutePosition: absolutePosition,
+                    relativePosition: match.index,
+                    lineNumber: lineNumber,
+                    templateIndex: templateIndex,
+                    entryName: entryName,
+                    originalLine: targetLine,
+                    originalTemplate: fullMatch,
+                    id: templates.length
                 });
             }
             
             currentPageTitle = 'Unknown Page'; // 在手动输入模式下，页面标题未知
             displayTemplates();
             updateStats();
-        }
-        
-        // 辅助函数：找到模板所在的原始行
-        function findOriginalLine(text, position) {
-            const lines = text.split('\n');
-            let currentPos = 0;
-            
-            for (let i = 0; i < lines.length; i++) {
-                const lineEnd = currentPos + lines[i].length + 1; // +1 for newline character
-                
-                if (position >= currentPos && position < lineEnd) {
-                    return lines[i].trim();
-                }
-                
-                currentPos = lineEnd;
-            }
-            
-            return 'Unknown line';
         }
         
         function loadPendingData() {
@@ -405,7 +436,7 @@
                 templateElement.className = 'template-item';
                 templateElement.innerHTML = `
                     <div class="template-header">
-                        <span>页面: ${template.page || 'Unknown'} | 用户: ${template.user || 'Unknown'}</span>
+                        <span>条目: ${template.entryName || 'Unknown'} | 页面: ${template.page || 'Unknown'}</span>
                         <span>原状态: ${template.status || '未设置'} ${template.score ? '| 原分数: ' + template.score : ''}</span>
                     </div>
                     <div class="template-content">${template.originalLine || template.original}</div>
@@ -492,12 +523,12 @@
         
         function updateOutput() {
             // 根据当前的templates数组生成新的Wikitext内容
-            if (currentPageTitle) {
-                // 如果是从输入框解析的，基于输入内容生成
-                let output = document.getElementById('wikitextInput').value;
+            if (originalWikitext) {
+                // 如果是从输入框解析的，基于原始输入内容生成
+                let output = originalWikitext;
                 
-                // 从后往前替换，避免位置偏移问题
-                const sortedTemplates = [...templates].sort((a, b) => (b.position || 0) - (a.position || 0));
+                // 按绝对位置倒序排列，以避免替换时影响后续位置
+                const sortedTemplates = [...templates].sort((a, b) => (b.absolutePosition || 0) - (a.absolutePosition || 0));
                 
                 for (const template of sortedTemplates) {
                     if (template.original && template.newStatus !== undefined) {
@@ -521,7 +552,7 @@
                 output += "待更新的项目:\n";
                 
                 templates.forEach(template => {
-                    output += `- 页面: ${template.page || 'Unknown'}, 用户: ${template.user || 'Unknown'}\n`;
+                    output += `- 条目: ${template.entryName || 'Unknown'}, 页面: ${template.page || 'Unknown'}\n`;
                     output += `  原状态: ${template.status || '未设置'}, 新状态: ${template.newStatus || template.status}\n`;
                     output += `  原分数: ${template.score || '无'}, 新分数: ${template.newScore || template.score}\n\n`;
                 });
@@ -582,14 +613,19 @@
                     };
                 }
                 
-                // 添加项目到页面的更新列表
+                // 添加项目到页面的更新列表，包含所有必要信息
                 pagesToUpdate[pageTitle].items.push({
-                    original: template.original,
+                    originalTemplate: template.originalTemplate || template.original,
                     newStatus: template.newStatus || template.status,
                     newScore: template.newScore || template.score,
                     status: template.status,
                     score: template.score,
-                    position: template.position
+                    absolutePosition: template.absolutePosition,
+                    relativePosition: template.relativePosition,
+                    lineNumber: template.lineNumber,
+                    templateIndex: template.templateIndex,
+                    entryName: template.entryName,
+                    originalLine: template.originalLine
                 });
             });
             
