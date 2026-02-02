@@ -64,6 +64,117 @@ function parseContributionPage(wikitext) {
 }
 
 /**
+ * 解析用户的贡献页面 Wikitext 代码，返回详细信息
+ * 包括每个项目的原始行、状态、分数和位置
+ */
+function parseContributionPageWithDetails(wikitext) {
+    const items = [];
+    let entryCount = 0;
+    let totalScore = 0;
+
+    // 预处理：移除所有注释（包括多行注释），防止注释中的模板被误统计
+    // 使用 [\s\S] 匹配包括换行符在内的所有字符，处理跨行注释
+    const cleanedWikitext = wikitext.replace(/<!--[\s\S]*?-->/g, '');
+
+    // 按行分割文本，逐行处理
+    const lines = cleanedWikitext.split('\n');
+    let inTable = false;
+    let currentLineNumber = 0;
+    
+    for (const line of lines) {
+        // 检测表格开始
+        if (line.trim().startsWith('{|')) {
+            inTable = true;
+            currentLineNumber++;
+            continue;
+        }
+        // 检测表格结束
+        if (line.trim().startsWith('|}')) {
+            inTable = false;
+            currentLineNumber++;
+            // 假设我们只关心第一个主要表格，或者全部表格都算（通常只有一个贡献表）
+            // 如果有多个表格，可能需要更精细的逻辑
+        }
+        
+        if (inTable) {
+            // 过滤：排除导入综述行（通常包含 Special:日志 和 type=import）
+            if (line.includes('type=import') && (line.includes('Special:日志') || line.includes('Special:Log'))) {
+                currentLineNumber++;
+                continue;
+            }
+
+            // 使用正则查找状态模板
+            // 模板格式: {{2026SFEditasonStatus|状态|分数(可选)}}
+            // 例如: {{2026SFEditasonStatus|pass|5}} 或 {{2026SFEditasonStatus|pass|11.3}}
+            // 修改正则：允许匹配小数 ([\d.]+)
+            const statusRegex = /\{\{2026SFEditasonStatus\|(.*?)(\|([\d.]+))?\}\}/g;
+            let match;
+            let lineCopy = line; // 复制行内容用于查找匹配位置
+            let lastIndex = 0;
+            
+            while ((match = statusRegex.exec(lineCopy)) !== null) {
+                // 每发现一个状态模板，视为一行有效条目
+                entryCount++;
+                
+                const originalMatch = match[0]; // 完整匹配的模板
+                const status = match[1] || ''; // 状态参数
+                const score = match[3] || ''; // 分数参数（如果有）
+                
+                // 计算模板在行中的位置
+                const templatePositionInLine = line.indexOf(originalMatch, lastIndex);
+                lastIndex = templatePositionInLine + originalMatch.length;
+                
+                // 如果有分数，累加到总分
+                if (score) {
+                    const scoreValue = parseFloat(score);
+                    // 确保分数是有效数字
+                    if (!isNaN(scoreValue)) {
+                        totalScore += scoreValue;
+                    }
+                }
+                
+                // 添加项目到列表
+                items.push({
+                    originalLine: line.trim(),
+                    status: status,
+                    score: score,
+                    position: templatePositionInLine,
+                    lineNumber: currentLineNumber
+                });
+            }
+        }
+        currentLineNumber++;
+    }
+
+    return { entryCount, totalScore, items };
+}
+
+/**
+ * Updates the page content with updated templates
+ */
+function updatePageContentWithTemplates(originalWikitext, updatedItems) {
+    let updatedWikitext = originalWikitext;
+    
+    // 按位置倒序排列，以避免替换时影响后续位置
+    const sortedItems = updatedItems.sort((a, b) => b.position - a.position);
+    
+    for (const item of sortedItems) {
+        // 创建新的模板字符串
+        let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
+        if (item.newScore && item.newStatus === 'pass') {
+            newTemplate += `|${item.newScore}`;
+        }
+        newTemplate += '}}';
+        
+        // 替换原始模板
+        const originalTemplate = `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
+        updatedWikitext = updatedWikitext.replace(originalTemplate, newTemplate);
+    }
+    
+    return updatedWikitext;
+}
+
+/**
  * Updates the mbox in the user page wikitext.
  */
 function updateUserPageContent(wikitext, count, score) {
@@ -94,6 +205,8 @@ function formatScore(score) {
 
 module.exports = {
     parseContributionPage,
+    parseContributionPageWithDetails,
+    updatePageContentWithTemplates,
     updateUserPageContent,
     formatScore
 };

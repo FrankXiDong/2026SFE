@@ -19,7 +19,7 @@ async function getOAuth2Token() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'UserAgent': config.userAgent
+                'User-Agent': config.userAgent
             },
             body: new URLSearchParams({
                 grant_type: 'client_credentials',
@@ -44,9 +44,17 @@ async function getOAuth2Token() {
 /**
  * 更新单个页面的内容
  */
-async function updatePageContent(bot, pageTitle, newContent, summary) {
+async function updatePageContent(bot, pageTitle, updatedItems, summary) {
     try {
-        await bot.save(pageTitle, newContent, summary);
+        // 先读取页面当前内容
+        const content = await bot.read(pageTitle);
+        const wikitext = content.revisions[0].content;
+        
+        // 应用更新到页面内容
+        const updatedWikitext = utils.updatePageContentWithTemplates(wikitext, updatedItems);
+        
+        // 保存更新后的内容
+        await bot.save(pageTitle, updatedWikitext, summary);
         console.log(pc.green(`[SUCCESS] 页面已更新: ${pageTitle}`));
         return true;
     } catch (err) {
@@ -128,7 +136,7 @@ async function updatePagesFromJson(bot) {
         await updatePageContent(
             bot, 
             pageData.title, 
-            pageData.content, 
+            pageData.items, 
             pageData.summary || 'bot: 批量更新审核状态 (2026春节编辑松)'
         );
     }

@@ -567,18 +567,16 @@
                 return;
             }
             
-            // 准备更新数据
-            const updateData = [];
+            // 准备更新数据 - 按页面分组
             const pagesToUpdate = {};
             
             templates.forEach(template => {
-                // 收集每个页面的更新信息
+                // 获取页面标题
                 const pageTitle = template.page || currentPageTitle;
                 
                 if (!pagesToUpdate[pageTitle]) {
                     pagesToUpdate[pageTitle] = {
                         title: pageTitle,
-                        content: '', // 将在服务器端获取原始内容并更新
                         items: [],
                         summary: 'bot: 批量更新审核状态 (2026春节编辑松)'
                     };
@@ -590,18 +588,13 @@
                     newStatus: template.newStatus || template.status,
                     newScore: template.newScore || template.score,
                     status: template.status,
-                    score: template.score
+                    score: template.score,
+                    position: template.position
                 });
             });
             
             // 转换为适合bot使用的格式
-            const finalUpdateData = Object.values(pagesToUpdate).map(page => {
-                return {
-                    title: page.title,
-                    items: page.items,
-                    summary: page.summary
-                };
-            });
+            const finalUpdateData = Object.values(pagesToUpdate);
             
             // 生成JSON并下载
             const jsonData = JSON.stringify(finalUpdateData, null, 2);
