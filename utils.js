@@ -15,11 +15,14 @@ function parseContributionPage(wikitext) {
     // 使用 [\s\S] 匹配包括换行符在内的所有字符，处理跨行注释
     const cleanedWikitext = wikitext.replace(/<!--[\s\S]*?-->/g, '');
 
-    // 按行分割文本，逐行处理
-    const lines = cleanedWikitext.split('\n');
+    // 先合并分为多行的表格行，再合并为一行
+    const mergedLines = cleanedWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').split('\n').map(line => line.replace('|-|', ''));
+
+    console.log('Merged Lines:', mergedLines);
+
     let inTable = false;
-    
-    for (const line of lines) {
+
+    for (const line of mergedLines) {
         // 检测表格开始
         if (line.trim().startsWith('{|')) {
             inTable = true;
@@ -28,12 +31,10 @@ function parseContributionPage(wikitext) {
         // 检测表格结束
         if (line.trim().startsWith('|}')) {
             inTable = false;
-            // 假设我们只关心第一个主要表格，或者全部表格都算（通常只有一个贡献表）
-            // 如果有多个表格，可能需要更精细的逻辑
         }
-        
+
         if (inTable) {
-            // 过滤：排除导入综述行（通常包含 Special:日志 和 type=import）
+            // 过滤：排除导入综述行
             if (line.includes('type=import') && (line.includes('Special:日志') || line.includes('Special:Log'))) {
                 continue;
             }
@@ -77,8 +78,8 @@ function parseContributionPageWithDetails(wikitext) {
     // 使用 [\s\S] 匹配包括换行符在内的所有字符，处理跨行注释
     const cleanedWikitext = wikitext.replace(/<!--[\s\S]*?-->/g, '');
 
-    // 按行分割文本，逐行处理
-    const lines = cleanedWikitext.split('\n');
+    // 先合并分为多行的表格行，再合并为一行
+    const lines = cleanedWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').split('\n').map(line => line.replace('|-|', ''));
     let inTable = false;
     let currentLineNumber = 0;
     
