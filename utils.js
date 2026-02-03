@@ -18,7 +18,7 @@ function parseContributionPage(wikitext) {
     // 先合并分为多行的表格行，再合并为一行
     const mergedLines = cleanedWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').split('\n').map(line => line.replace('|-|', ''));
 
-    console.log('Merged Lines:', mergedLines);
+    // console.log('Merged Lines:', mergedLines);
 
     let inTable = false;
 
