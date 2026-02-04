@@ -1513,21 +1513,6 @@
                 document.getElementById('finishReviewBtn').disabled = false;
             }, 2000);
         }
-        
-        // 页面加载完成后的初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查是否有本地的 pending_data.json 文件并自动加载
-            fetch('pending_data.json')
-                .then(response => {
-                    if (response.ok) {
-                        // 如果有文件，自动加载
-                        loadPendingData();
-                    }
-                })
-                .catch(error => {
-                    // 如果没有文件则忽略
-                });
-        });
     </script>
 </body>
 </html>
