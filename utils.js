@@ -120,6 +120,10 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
         itemsByLine[item.lineNumber].push(item);
     });
 
+    // 使用正则一次性匹配模板以及可能存在的备注段（捕获整个 <br/><small>...</small>），按匹配序号替换
+    // 支持空分数参数（如 |}} 或 |<空>}}），并捕获分数原始字符串以便保留
+    const statusWithRemarkRegex = /\{\{2026SFEditasonStatus\|([^|}]*)(?:\|([^}]*))?\}\}((?:<br\s*\/?\>\s*<small>.*?<\/small>)?)/g;
+
     for (const [lineNumStr, lineItems] of Object.entries(itemsByLine)) {
         const lineNum = parseInt(lineNumStr);
         if (lineNum < processedLines.length) {
@@ -127,34 +131,35 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
 
             lineItems.sort((a, b) => (a.templateIndex || 0) - (b.templateIndex || 0));
 
-            for (const item of lineItems) {
-                let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
-                if (item.newScore !== undefined) { // 添加分数
+            const itemsMap = {};
+            for (const it of lineItems) {
+                itemsMap[it.templateIndex || 0] = it;
+            }
+
+            let matchCounter = 0;
+            currentLine = currentLine.replace(statusWithRemarkRegex, (fullMatch, status, scoreCaptured, remarkFull) => {
+                const item = itemsMap[matchCounter++];
+                if (!item) return fullMatch;
+
+                const useStatus = item.newStatus !== undefined ? item.newStatus : (item.status !== undefined ? item.status : status);
+                let newTemplate = `{{2026SFEditasonStatus|${useStatus}`;
+
+                // 决定分数字符串：优先使用 item.newScore（可能为数字或空字符串），否则保留原始捕获（可能为 undefined 或空字符串）
+                if (item.newScore !== undefined) {
                     newTemplate += `|${item.newScore}`;
+                } else if (scoreCaptured !== undefined) {
+                    newTemplate += `|${scoreCaptured}`;
                 }
+
                 newTemplate += '}}';
 
-                if (item.newRemark) { // 添加备注
-                    const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
-                    const pos = currentLine.indexOf(originalTemplate);
-
-                    if (pos !== -1) {
-                        const afterTemplate = currentLine.substring(pos + originalTemplate.length);
-                        const remarkPattern = /<br\s*\/?>\s*<small>(.*?)<\/small>/;
-                        const match = afterTemplate.match(remarkPattern);
-
-                        if (!match) {
-                            newTemplate += `<br/><small>（${item.newRemark}）</small>`;
-                        }
-                    }
+                // 不保留原始备注。若提供 newRemark 则添加，否则不添加备注。
+                if (item.newRemark) {
+                    return newTemplate + `<br/><small>（${item.newRemark}）</small>`;
+                } else {
+                    return newTemplate;
                 }
-
-                const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`; // 若无原始模板，则构造一个
-                const pos = currentLine.indexOf(originalTemplate); // 使用原始模板进行查找
-                if (pos !== -1) {
-                    currentLine = currentLine.substring(0, pos) + newTemplate + currentLine.substring(pos + originalTemplate.length);
-                }
-            }
+            });
 
             processedLines[lineNum] = currentLine;
         }
