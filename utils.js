@@ -172,7 +172,7 @@ function parseContributionPageWithDetails(wikitext) {
  */
 function updatePageContentWithTemplates(originalWikitext, updatedItems) {
     const lines = originalWikitext.replace(/\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').split('\n').map(line => line.replaceAll('||}','\n|}'));
-    const processedLines = [...lines];
+    const processedLines = [...lines]; // 创建行的副本以进行修改
 
     const itemsByLine = {};
     updatedItems.forEach(item => {
@@ -191,12 +191,12 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
 
             for (const item of lineItems) {
                 let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
-                if (item.newScore !== undefined && item.newScore !== null && item.newStatus === 'pass') {
+                if (item.newScore !== undefined) { // 添加分数
                     newTemplate += `|${item.newScore}`;
                 }
                 newTemplate += '}}';
 
-                if (item.newRemark && item.newStatus === 'pass') {
+                if (item.newRemark) { // 添加备注
                     const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
                     const pos = currentLine.indexOf(originalTemplate);
 
@@ -211,8 +211,8 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
                     }
                 }
 
-                const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
-                const pos = currentLine.indexOf(originalTemplate);
+                const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`; // 若无原始模板，则构造一个
+                const pos = currentLine.indexOf(originalTemplate); // 使用原始模板进行查找
                 if (pos !== -1) {
                     currentLine = currentLine.substring(0, pos) + newTemplate + currentLine.substring(pos + originalTemplate.length);
                 }
@@ -221,7 +221,6 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
             processedLines[lineNum] = currentLine;
         }
     }
-
     return processedLines.join('\n');
 }
 
