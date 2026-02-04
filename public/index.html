@@ -1042,8 +1042,8 @@
                             <label>状态:</label>
                             <select class="status-select" onchange="updateTemplate(${template.id}, this.value)" id="statusSelect${template.id}">
                                 <option value="pending" ${(template.newStatus || template.status) === 'pending' ? 'selected' : ''}>待审核</option>
-                                <option value="reject" ${(template.newStatus || template.status) === 'reject' ? 'selected' : ''}>拒绝</option>
-                                <option value="pass" ${(template.newStatus || template.status) === 'pass' ? 'selected' : ''}>通过</option>
+                                <option value="拒绝" ${(template.newStatus || template.status) === '拒绝' ? 'selected' : ''}>拒绝</option>
+                                <option value="通过" ${(template.newStatus || template.status) === '通过' ? 'selected' : ''}>通过</option>
                             </select>
                         </div>
                         <div class="control-group">
