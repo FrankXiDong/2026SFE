@@ -252,10 +252,11 @@ async function finishReviewProcess(content) {
 
         await updatePagesFromJson(bot, newContent);
 
-        // 更新排行榜
-        console.log(pc.blue('[INFO] 更新排行榜...'));
-        const participants = JSON.parse(content); // 假设 content 包含参与者数据
-        await updateLeaderboard(bot, participants);
+        console.log(pc.green('[SUCCESS] 所有页面更新完成，开始更新总排行榜...'));
+        HYYY_bot.main().catch(e => {
+            console.error(pc.red('[FATAL] 总排行榜更新失败:'), e);
+            process.exit(1);
+        });// 运行HYYY_bot代码
 
     } catch (e) {
         console.error(pc.red('[FATAL] 完成审核过程失败:'), e);
