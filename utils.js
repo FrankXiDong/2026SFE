@@ -171,11 +171,9 @@ function parseContributionPageWithDetails(wikitext) {
  * 使用更精确的替换方法，基于行号和模板索引，确保模板替换准确无误
  */
 function updatePageContentWithTemplates(originalWikitext, updatedItems) {
-    // 按行分割文本，逐行处理
-    const lines = originalWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').replaceAll('||}','\n|}').split('\n');
-    const processedLines = [...lines]; // 复制数组以避免修改原数组
+    const lines = originalWikitext.replace(/\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').split('\n').map(line => line.replaceAll('||}','\n|}'));
+    const processedLines = [...lines];
 
-    // 按行号分组更新项，确保同一条目的多个模板能被正确处理
     const itemsByLine = {};
     updatedItems.forEach(item => {
         if (!itemsByLine[item.lineNumber]) {
@@ -184,44 +182,35 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
         itemsByLine[item.lineNumber].push(item);
     });
 
-    // 遍历每一行，替换其中的模板
     for (const [lineNumStr, lineItems] of Object.entries(itemsByLine)) {
         const lineNum = parseInt(lineNumStr);
         if (lineNum < processedLines.length) {
             let currentLine = processedLines[lineNum];
 
-            // 按模板索引排序，确保替换顺序正确
             lineItems.sort((a, b) => (a.templateIndex || 0) - (b.templateIndex || 0));
 
-            // 遍历当前行的所有模板更新项，按顺序替换
             for (const item of lineItems) {
-                // 创建新的模板字符串
                 let newTemplate = `{{2026SFEditasonStatus|${item.newStatus}`;
                 if (item.newScore !== undefined && item.newScore !== null && item.newStatus === 'pass') {
                     newTemplate += `|${item.newScore}`;
                 }
                 newTemplate += '}}';
 
-                // 如果有备注且状态为通过，则添加备注
                 if (item.newRemark && item.newStatus === 'pass') {
-                    // 检查原始模板后面是否已经有备注（包含<br/><small>或类似的HTML标签）
                     const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
                     const pos = currentLine.indexOf(originalTemplate);
 
                     if (pos !== -1) {
-                        // 检查原始模板之后是否已经有备注
                         const afterTemplate = currentLine.substring(pos + originalTemplate.length);
                         const remarkPattern = /<br\s*\/?>\s*<small>(.*?)<\/small>/;
                         const match = afterTemplate.match(remarkPattern);
 
                         if (!match) {
-                            // 如果没有现有备注，则添加新的备注
                             newTemplate += `<br/><small>（${item.newRemark}）</small>`;
                         }
                     }
                 }
 
-                // 找到原始模板在当前行中的位置并替换（只替换第一个匹配项，以避免误替换其他相同模板）
                 const originalTemplate = item.originalTemplate || `{{2026SFEditasonStatus|${item.status}${item.score ? `|${item.score}` : ''}}}`;
                 const pos = currentLine.indexOf(originalTemplate);
                 if (pos !== -1) {
@@ -229,12 +218,10 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
                 }
             }
 
-            // 更新行内容
             processedLines[lineNum] = currentLine;
         }
     }
 
-    // 重新组合所有行
     return processedLines.join('\n');
 }
 

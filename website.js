@@ -221,11 +221,7 @@ async function finishReviewProcess(content) {
     bot.request = async function(params) {
         // 确保headers中的Authorization值只包含ASCII字符
         if(this.requestOptions.headers && this.requestOptions.headers.Authorization) {
-            const authHeader = this.requestOptions.headers.Authorization;
-            const cleanAuthHeader = authHeader.split('').filter(char => 
-                char.charCodeAt(0) <= 255
-            ).join('');
-            this.requestOptions.headers.Authorization = cleanAuthHeader;
+            this.requestOptions.headers.Authorization = this.requestOptions.headers.Authorization.replace(/[^\x00-\x7F]/g, '');
         }
         return originalRequest.call(this, params);
     };
@@ -242,8 +238,8 @@ async function finishReviewProcess(content) {
         const user = await bot.userinfo();
         console.log(pc.green(`[INFO] 登录成功，当前身份: ${user.name}`));
 
-        // 从JSON文件更新页面
-        await updatePagesFromJson(bot,content);
+        console.log(pc.blue('[INFO] 开始更新页面内容...'));
+        await updatePagesFromJson(bot, content);
 
     } catch (e) {
         console.error(pc.red('[FATAL] 完成审核过程失败:'), e);
@@ -579,13 +575,36 @@ app.get('/api/list',async (err,res)=>{
         data:JSON.stringify(data, null, 2)
     })
 })
-app.post('/api/push',async (req,res)=>{
-    const inp=req.body['content'];
-    await finishReviewProcess(inp);
-    res.send({
-        code:200
-    })
-})
+app.post('/api/push', async (req, res) => {
+    try {
+        const inp = req.body['content'];
+
+        // 验证输入内容是否存在
+        if (!inp) {
+            console.error('[ERROR] 请求体中缺少 content 字段');
+            return res.status(400).send({
+                code: 400,
+                message: '请求体中缺少 content 字段'
+            });
+        }
+
+        console.log('[INFO] 接收到的内容:', inp);
+
+        // 调用 finishReviewProcess 并传递内容
+        await finishReviewProcess(inp);
+
+        res.send({
+            code: 200,
+            message: '审核完成并成功推送'
+        });
+    } catch (error) {
+        console.error('[ERROR] 推送审核数据时发生错误:', error);
+        res.status(500).send({
+            code: 500,
+            message: '服务器内部错误'
+        });
+    }
+});
 app.get('/',)
 
 app.listen(2026,()=>{
