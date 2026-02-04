@@ -257,7 +257,7 @@
 
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto;
+            margin: 5vh auto; 
             padding: 20px;
             border: 1px solid #888;
             border-radius: 8px;
@@ -626,6 +626,7 @@
                             <option value="小作品">小作品（基础分: 0.5）</option>
                             <option value="DYK">DYK（基础分: 1）</option>
                             <option value="GA">GA（基础分: 3）</option>
+                            <option value="list">列表</option>
                         </select>
                     </div>
                     
@@ -636,7 +637,7 @@
                         <input type="number" id="imgCount" min="0" step="1" value="0" placeholder="请输入图片个数">
                     </div>
                     
-                    <div class="input-group">
+                    <div class="input-group" id="multiplierSelection">
                         <h3><i class="fas fa-times-circle"></i> 乘数</h3>
                         
                         <div class="switch-group">
@@ -655,10 +656,6 @@
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="political" value="2">
                                     <label for="political">关于中国政治概念、近现代史的条目（2x）</label>
-                                </div>
-                                <div class="checkbox-item indent">
-                                    <input type="checkbox" id="political2" value="0.5" disabled>
-                                    <label for="political2">机关单位类（0.5x）</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="common" value="2.2">
@@ -871,13 +868,6 @@
             }
         }
         
-        // 模拟API响应的函数（用于测试，实际使用时需要注释掉）
-        // 注意：这只是模拟代码，实际使用时需要注释掉或删
-        
-        // 初始化时设置模拟API（仅用于测试，实际使用时请注释掉）
-        // setupMockAPI();
-        
-        // 原有函数保持不变...
         function parseTemplates() {
             const input = document.getElementById('wikitextInput').value;
             originalWikitext = input; // 保存原始wikitext
@@ -1134,6 +1124,7 @@
             const position = document.getElementById('position');
             const finalScore = document.getElementById('finalScore');
             const sequentialOutput = document.getElementById('sequentialOutput');
+            const multiplierButtonClass=document.getElementById('multiplierSelection');
 
             // 初始化计算
             calculateScore();
@@ -1214,9 +1205,29 @@
                         baseScore = 3;
                         wordThreshold = 10000;
                         break;
+                    case 'list':
+                        baseScore = -1;
+                        break;
                     default:
                         baseScore = 0;
                         wordThreshold = 0;
+                }
+                if(baseScore===-1){
+                    multiplierButtonClass.style.display='none';
+                    imgCount.disabled=true;
+                    if(words<500){
+                        baseScore=0.5;
+                    }else if(words<2000){
+                        baseScore=1.5;
+                    }else{
+                        baseScore=2.5;
+                    }
+                    sequentialOutput.textContent = `列表；${Math.floor(words/100.0)*100}字`;
+                    finalScore.textContent = baseScore.toFixed(5);
+                    return;
+                }else{
+                    multiplierButtonClass.style.display='block';
+                    imgCount.disabled=false;
                 }
 
                 // 计算字数奖励
@@ -1255,7 +1266,6 @@
                 if (position.checked) spearr.push("白区对应条目有严重立场问题");
                 if (common.checked) spearr.push("在6个参考书里4个及以上存在对应词条");
                 if (political.checked) spearr.push("中国政治/近现代史条目");
-                if (political2.checked) spearr.push("机关单位");
                 specialCategory=spearr.join("；")
 
                 if (specialCategory) {
