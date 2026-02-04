@@ -655,8 +655,8 @@
                                     <label for="political">关于中国政治概念、近现代史的条目（2x）</label>
                                 </div>
                                 <div class="checkbox-item indent">
-                                    <input type="checkbox" id="political2" value="0.6" disabled>
-                                    <label for="political2">机关单位类（0.6x）</label>
+                                    <input type="checkbox" id="political2" value="0.5" disabled>
+                                    <label for="political2">机关单位类（0.5x）</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="common" value="2.2">
@@ -1252,9 +1252,9 @@
                 // 第五个输入：特殊分类（取最大的一个，如果没有勾选则不体现）
                 let specialCategory = "";
                 let spearr=[];
-                if (position.checked)spearr.push("白区有严重立场问题，符合标准");
+                if (position.checked)spearr.push("白区对应条目有严重立场问题");
                 if (common.checked) spearr.push("在6个参考书里4个及以上存在对应词条");
-                if (political.checked) spearr.push("中国政治概念、近现代史");
+                if (political.checked) spearr.push("中国政治/近现代史条目");
                 if(political2.checked)spearr.push("机关单位");
                 specialCategory=spearr.join("；")
 
