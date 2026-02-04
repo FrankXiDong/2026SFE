@@ -656,10 +656,6 @@
                                     <input type="checkbox" id="political" value="2">
                                     <label for="political">关于中国政治概念、近现代史的条目（2x）</label>
                                 </div>
-                                <div class="checkbox-item indent">
-                                    <input type="checkbox" id="political2" value="0.5" disabled>
-                                    <label for="political2">机关单位类（0.5x）</label>
-                                </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="common" value="2.2">
                                     <label for="common">在中文白区、英文白区、中国大百科全书、辞海、现代汉语词典、术语在线这6个参考书里，4个及以上存在对应词条，但求闻百科没有的条目（2.2x）</label>
@@ -871,13 +867,6 @@
             }
         }
         
-        // 模拟API响应的函数（用于测试，实际使用时需要注释掉）
-        // 注意：这只是模拟代码，实际使用时需要注释掉或删
-        
-        // 初始化时设置模拟API（仅用于测试，实际使用时请注释掉）
-        // setupMockAPI();
-        
-        // 原有函数保持不变...
         function parseTemplates() {
             const input = document.getElementById('wikitextInput').value;
             originalWikitext = input; // 保存原始wikitext
