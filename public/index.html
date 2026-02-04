@@ -569,7 +569,7 @@
                 <label for="jsonDataFile">
                     <i class="fas fa-file-upload"></i> 上传 pending_data.json 文件：
                 </label>
-                <input type="file" id="jsonDataFile" accept=".json" onchange="handleJsonFileUpload(event)" disabled>
+                <input type="file" id="jsonDataFile" accept=".json" onchange="handleJsonFileUpload(event)">
             </div>
         </div>
         
@@ -1146,21 +1146,29 @@
                 if (currentTemplate) {
                     const sequentialOutput = document.getElementById('sequentialOutput').textContent;
                     if (sequentialOutput && sequentialOutput !== '等待计算...') {
+                        // 设置状态为pass
+                        currentTemplate.newStatus = '通过';
                         currentTemplate.newScore = parseFloat(finalScore.textContent) || 0;
                         currentTemplate.newRemark = sequentialOutput;
 
-                        // 更新界面上的分数和备注输入框
+                        // 更新界面上的状态选择框、分数和备注输入框
+                        const statusSelect = document.getElementById(`statusSelect${currentTemplateId}`);
                         const scoreInput = document.getElementById(`scoreInput${currentTemplateId}`);
                         const remarkInput = document.getElementById(`remarkInput${currentTemplateId}`);
+                        
+                        if (statusSelect) {
+                            statusSelect.value = '通过';
+                        }
                         if (scoreInput) {
                             scoreInput.value = currentTemplate.newScore;
+                            scoreInput.disabled = false; // 启用分数输入框
                         }
                         if (remarkInput) {
                             remarkInput.value = currentTemplate.newRemark;
                         }
 
                         updateOutput();
-                        alert('得分和备注已应用到条目');
+                        alert('得分、备注已应用到条目，状态已设为通过');
                     } else {
                         alert('请先计算并生成计算器结果再应用');
                     }
