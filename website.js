@@ -97,8 +97,9 @@ async function findPendingReviews(bot) {
             
             const result = utils.parseContributionPageWithDetails(wikitext);
             const pendingItems = result.items.filter(item =>
-                ['pending', '待审核', 'doing', '审核中'].includes(item.status.toLowerCase())
-            );
+                ['pending', '待审核', 'doing', '审核中'].includes(item.status.toLowerCase()) ||
+                (['pass', '通过'].includes(item.status.toLowerCase()) && !item.score)
+            ); // 筛选出待审核项目或通过但无得分的项目
 
             for (const item of pendingItems) {
                 pendingData.push({
