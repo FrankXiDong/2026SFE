@@ -1050,7 +1050,7 @@
                             <label>分数:</label>
                             <input type="number" step="0.1" min="0" class="score-input" value="${template.newScore !== undefined ? template.newScore : template.score}" 
                                    onchange="updateTemplateScore(${template.id}, this.value)" id="scoreInput${template.id}"
-                                   ${(template.newStatus || template.status) !== 'pass' ? 'disabled' : ''}>
+                                   ${(template.newStatus || template.status) !== 'pass' && (template.newStatus || template.status) !== '通过' ? 'disabled' : ''}>
                         </div>
                         <div class="control-group">
                             <label>备注:</label>
@@ -1276,7 +1276,7 @@
             
             // 如果状态变为通过，启用分数输入框；如果是拒绝或待审核，禁用分数输入框
             const scoreInput = document.getElementById(`scoreInput${templateId}`);
-            if (newStatus === 'pass') {
+            if (newStatus === 'pass' || newStatus === '通过') {
                 scoreInput.disabled = false;
             } else {
                 scoreInput.disabled = true;
@@ -1297,7 +1297,7 @@
             const remarkInput = document.getElementById(`remarkInput${templateId}`);
             
             templates[templateId].newStatus = statusSelect.value;
-            if (statusSelect.value === 'pass') {
+            if (statusSelect.value === '通过' || statusSelect.value === 'pass') {
                 templates[templateId].newScore = scoreInput.value;
             }
             templates[templateId].newRemark = remarkInput.value;
@@ -1308,7 +1308,7 @@
         function updateAllTemplates() {
             // 将所有模板状态设置为通过，并根据某种规则设置分数
             templates.forEach((template, index) => {
-                template.newStatus = 'pass';
+                template.newStatus = '通过';
                 // 默认分数可以根据模板在列表中的位置或其他规则设定
                 if (!template.newScore || template.newScore === '') {
                     template.newScore = 0.5;
@@ -1321,7 +1321,7 @@
                 const scoreInput = document.getElementById(`scoreInput${index}`);
                 const remarkInput = document.getElementById(`remarkInput${index}`);
                 
-                if (statusSelect) statusSelect.value = 'pass';
+                if (statusSelect) statusSelect.value = '通过';
                 if (scoreInput) {
                     scoreInput.value = template.newScore || template.score;
                     scoreInput.disabled = false;
@@ -1347,7 +1347,7 @@
                     if (template.original && template.newStatus !== undefined) {
                         // 构造新的模板字符串
                         let newTemplate = `{{2026SFEditasonStatus|${template.newStatus}`;
-                        if (template.newScore && template.newStatus === 'pass') {
+                        if (template.newScore && template.newStatus === 'pass' || template.newStatus === '通过') {
                             newTemplate += `|${template.newScore}`;
                         }
                         newTemplate += '}}';
@@ -1409,11 +1409,11 @@
             
             const stats = {
                 total: templates.length,
-                passed: templates.filter(t => (t.newStatus || t.status) === 'pass').length,
-                rejected: templates.filter(t => (t.newStatus || t.status) === 'reject').length,
+                passed: templates.filter(t => (t.newStatus || t.status) === '通过').length,
+                rejected: templates.filter(t => (t.newStatus || t.status) === '拒绝').length,
                 pending: templates.filter(t => (t.newStatus || t.status) === 'pending').length,
                 totalScore: templates
-                    .filter(t => (t.newStatus || t.status) === 'pass' && (t.newScore !== undefined ? t.newScore : t.score))
+                    .filter(t => (t.newStatus || t.status) === '通过' && (t.newScore !== undefined ? t.newScore : t.score))
                     .reduce((sum, t) => sum + parseFloat((t.newScore !== undefined ? t.newScore : t.score) || 0), 0),
                 withRemarks: templates.filter(t => (t.newRemark || t.remark)).length
             };
