@@ -2,6 +2,7 @@ const { Mwn } = require('mwn');
 const fs = require('fs');
 const config = require('./config');
 const utils = require('./utils');
+const HYYY_bot = require('./HYYY_bot');
 const pc = require('picocolors');
 
 async function getOAuth2Token() {
