@@ -349,6 +349,7 @@ async function checkVeteranStatus(bot, username) {
 }
 
 async function updateLeaderboard(bot, participants) {
+    return; // 暂时禁用排行榜更新功能
     const leaderboardTitle = 'Qiuwen:2026年春节编辑松/提交'; 
     console.log(pc.cyan(`[INFO] 正在更新总排行榜: ${leaderboardTitle}...`));
 
