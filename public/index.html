@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026年春节编辑松 - 半自动审核工具</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
     <!-- 添加 Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1128,7 +1130,6 @@
             const newUser = document.getElementById('newUser');
             const translation = document.getElementById('translation');
             const political = document.getElementById('political');
-            const political2 = document.getElementById('political2');
             const common = document.getElementById('common');
             const position = document.getElementById('position');
             const finalScore = document.getElementById('finalScore');
@@ -1174,14 +1175,8 @@
             translation.addEventListener('change', calculateScore);
             political.addEventListener('change', calculateScore);
             political.addEventListener('change', upd_political);
-            political2.addEventListener('change', calculateScore);
             common.addEventListener('change', calculateScore);
             position.addEventListener('change', calculateScore);
-
-            function upd_political(){
-                political2.disabled=!political.checked;
-                political2.checked=political2.checked&&political.checked;
-            }
 
             function calculateScore() {
                 // 获取输入值
@@ -1196,8 +1191,6 @@
                 if (position.checked) specialMultiplier = Math.max(specialMultiplier, 3);
                 if (common.checked) specialMultiplier = Math.max(specialMultiplier, 2.2);
                 if (political.checked) specialMultiplier = Math.max(specialMultiplier, 2);
-
-                if(specialMultiplier===2&&political2.checked)specialMultiplier*=0.6;
 
                 // 确定基础分数和字数阈值
                 let baseScore, wordThreshold;
@@ -1252,10 +1245,10 @@
                 // 第五个输入：特殊分类（取最大的一个，如果没有勾选则不体现）
                 let specialCategory = "";
                 let spearr=[];
-                if (position.checked)spearr.push("白区对应条目有严重立场问题");
+                if (position.checked) spearr.push("白区对应条目有严重立场问题");
                 if (common.checked) spearr.push("在6个参考书里4个及以上存在对应词条");
                 if (political.checked) spearr.push("中国政治/近现代史条目");
-                if(political2.checked)spearr.push("机关单位");
+                if (political2.checked) spearr.push("机关单位");
                 specialCategory=spearr.join("；")
 
                 if (specialCategory) {
