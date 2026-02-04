@@ -1029,8 +1029,8 @@
                 const templateElement = document.createElement('div');
                 templateElement.className = 'template-item';
                 const entry_name = template.entryName && template.entryName.startsWith('[[') && template.entryName.endsWith(']]')
-                    ? `- 条目: <a href="https://www.qiuwenbaike.cn/wiki/${template.entryName.slice(2, -2)}" target="_blank">${template.entryName.slice(2, -2)}</a>, 页面: ${template.page || 'Unknown'}\n`
-                    : `- 条目: ${template.entryName || 'Unknown'}, 页面: ${template.page || 'Unknown'}\n`;
+                    ? `- 条目：<a href="https://www.qiuwenbaike.cn/wiki/${template.entryName.slice(2, -2)}" target="_blank">${template.entryName.slice(2, -2)}</a>, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`
+                    : `- 条目：${template.entryName || 'Unknown'}, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`;
                 templateElement.innerHTML = `
                     <div class="template-header">
                         <span>${entry_name}</span>
@@ -1039,7 +1039,7 @@
                     <div class="template-content">${template.originalLine || template.original}</div>
                     <div class="controls">
                         <div class="control-group">
-                            <label>状态:</label>
+                            <label>状态：</label>
                             <select class="status-select" onchange="updateTemplate(${template.id}, this.value)" id="statusSelect${template.id}">
                                 <option value="pending" ${(template.newStatus || template.status) === 'pending' ? 'selected' : ''}>待审核</option>
                                 <option value="拒绝" ${(template.newStatus || template.status) === '拒绝' ? 'selected' : ''}>拒绝</option>
@@ -1047,13 +1047,13 @@
                             </select>
                         </div>
                         <div class="control-group">
-                            <label>分数:</label>
+                            <label>分数：</label>
                             <input type="number" step="0.1" min="0" class="score-input" value="${template.newScore !== undefined ? template.newScore : template.score}" 
                                    onchange="updateTemplateScore(${template.id}, this.value)" id="scoreInput${template.id}"
                                    ${(template.newStatus || template.status) !== 'pass' && (template.newStatus || template.status) !== '通过' ? 'disabled' : ''}>
                         </div>
                         <div class="control-group">
-                            <label>备注:</label>
+                            <label>备注：</label>
                             <input type="text" class="remark-input" placeholder="备注内容（可选）" 
                                    value="${template.remark || ''}" 
                                    onchange="updateTemplateRemark(${template.id}, this.value)" id="remarkInput${template.id}">
