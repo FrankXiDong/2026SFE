@@ -17,7 +17,7 @@ function parseContributionPageWithDetails(wikitext) {
     const cleanedWikitext = wikitext.replace(/<!--[\s\S]*?-->/g, '');
 
     // 先合并分为多行的表格行，再合并为一行
-    const lines = cleanedWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').split('\n');
+    const lines = cleanedWikitext.replace(/\\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').replace(/(?:\|\s*)+}}/g, '}}').split('\n');
     let inTable = false;
     let currentLineNumber = 0;
     
@@ -29,7 +29,7 @@ function parseContributionPageWithDetails(wikitext) {
             continue;
         }
         // 检测表格结束
-        if (line.trim().startsWith('|}')) {
+        if (line.trim().startsWith('|}') && '||}'.includes(line.trim())) {
             inTable = false;
             currentLineNumber++;
             continue;
