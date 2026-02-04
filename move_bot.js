@@ -17,12 +17,12 @@ async function getOAuth2Token() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': config.userAgent
+                'User-Agent': config.move_bot.userAgent
             },
             body: new URLSearchParams({
                 grant_type: 'client_credentials',
-                client_id: config.oauth2.clientId,
-                client_secret: config.oauth2.clientSecret
+                client_id: config.move_bot.clientId,
+                client_secret: config.move_bot.clientSecret
             })
         });
 

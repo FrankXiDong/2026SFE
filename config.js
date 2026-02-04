@@ -10,6 +10,11 @@ module.exports = {
         clientSecret: process.env.OAUTH2_CLIENT_SECRET,
         accessToken: process.env.OAUTH2_ACCESS_TOKEN
     },
+    move_bot: {
+        userAgent: process.env.MOVE_BOT_USER_AGENT || 'Qiuwen/1.1 MOVE_Tool/1.1 (Node.js/mwn; +https://www.qiuwenbaike.cn/index.php?curid=2922424)',
+        clientId: process.env.MOVE_OAUTH2_CLIENT_ID,
+        clientSecret: process.env.MOVE_OAUTH2_CLIENT_SECRET,
+    },
     // Customize rate limits
     requestOptions: {
         retry: {
