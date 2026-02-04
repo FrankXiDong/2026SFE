@@ -240,7 +240,22 @@ async function finishReviewProcess(content) {
         console.log(pc.green(`[INFO] 登录成功，当前身份: ${user.name}`));
 
         console.log(pc.blue('[INFO] 开始更新页面内容...'));
-        await updatePagesFromJson(bot, content);
+
+
+        // 检查贡献页顶端信息并更新
+        const { entryCount, totalScore } = utils.parseContributionPage(content);
+        const formattedScore = utils.formatScore(totalScore);// 格式化分数到小数点后两位
+        const newContent = utils.updateUserPageContent(content, entryCount, formattedScore);// 检查并更新用户的贡献页头部信息
+        if (newContent !== content) {
+            console.log(pc.yellow(`[ACTION] 更新页面 ${username}: 条目数=${entryCount}, 得分=${formattedScore}`));// 如果统计数据更新，输出日志
+        }
+
+        await updatePagesFromJson(bot, newContent);
+
+        // 更新排行榜
+        console.log(pc.blue('[INFO] 更新排行榜...'));
+        const participants = JSON.parse(content); // 假设 content 包含参与者数据
+        await updateLeaderboard(bot, participants);
 
     } catch (e) {
         console.error(pc.red('[FATAL] 完成审核过程失败:'), e);
@@ -395,8 +410,10 @@ function updateTimestamp(content) {
     // 获取当前时间并转换为 UTC+8（中国标准时间）
     const now = new Date();
     
-    // 正确计算 UTC+8 时间：先获取 UTC 时间，再加上 8 小时
-    const utc8Time = new Date(now.getTime() + (now.getTimezoneOffset() * 60 * 1000) + (8 * 60 * 60 * 1000));
+    // 正确计算 UTC+8 时间：
+    // 直接在 UTC 时间戳基础上增加 8 小时
+    const utc8Ms = now.getTime() + (8 * 60 * 60 * 1000);
+    const utc8Time = new Date(utc8Ms);
     
     // 格式化时间：xxxx年xx月xx日 xx:xx:xx UTC+8
     const year = utc8Time.getUTCFullYear();
