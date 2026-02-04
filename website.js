@@ -561,7 +561,7 @@ const express = require('express')
 const app=express()
 app.use(express.static('public'));
 //将文件部署到服务器
-// 通过ap.listen进行服务器的配置，并启动服务器，接收两个配置参数，一个是对应的端口号，一个是启动成功的回调函数
+// 通过app.listen进行服务器的配置，并启动服务器，接收两个配置参数，一个是对应的端口号，一个是启动成功的回调函数
 //get接口的开发
 app.use(express.json());
 const bot = new Mwn({
@@ -590,4 +590,11 @@ app.get('/',)
 
 app.listen(2026,()=>{
     console.log('服务器启动成功，运行于http://localhost:2026');
+    // 尝试打开浏览器
+    const openCmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+    const child = spawn(openCmd, ['http://localhost:2026'], { shell: true });
+    
+    child.on('error', (err) => {
+        console.log(pc.yellow('[WARN] 自动打开浏览器失败，手动打开 http://localhost:2026'));
+    });
 })
