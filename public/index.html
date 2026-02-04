@@ -1303,12 +1303,7 @@
                 template.newStatus = 'pass';
                 // 默认分数可以根据模板在列表中的位置或其他规则设定
                 if (!template.newScore || template.newScore === '') {
-                    template.newScore = (index + 1) * 1; // 示例：按顺序分配分数
-                }
-                
-                // 如果没有备注，则可以设置默认备注（可选）
-                if (!template.newRemark) {
-                    template.newRemark = `批量通过 - 模板 ${index + 1}`;
+                    template.newScore = 0.5;
                 }
             });
             
