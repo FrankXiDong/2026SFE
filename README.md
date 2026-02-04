@@ -45,7 +45,7 @@ node get_pending_list.js
 #### 审核工具（服务器模式）
 运行（需要同意防火墙）
 ```bash
-node website.js
+node server.js
 ```
 
 访问http://localhost:2026/ ，即可。
