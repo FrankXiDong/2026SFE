@@ -625,7 +625,7 @@
                         <select id="entryType">
                             <option value="小作品">小作品（基础分: 0.5）</option>
                             <option value="DYK">DYK（基础分: 1）</option>
-                            <option value="暂定GA">暂定GA（基础分: 3）</option>
+                            <option value="GA">暂定GA（基础分: 3）</option>
                             <option value="list">列表</option>
                             <option value="模板">模板</option>
                         </select>
@@ -638,6 +638,18 @@
                         <input type="number" id="imgCount" min="0" step="1" value="0" placeholder="请输入图片个数">
                         <h3><i class="fas fa-image"></i> 链入页面数</h3>
                         <input type="number" id="linkCount" min="0" step="1" value="0" placeholder="请输入链入页面数（即被几个页面使用、嵌入）">
+                    </div>
+
+                    <div class="input-group" id="InsertWords">
+                        <h3><i class="fa-solid fa-battery-full"></i> 常用插入语</h3>
+                        <div class="switch-group">
+                            <input type="checkbox" id="tempUse">
+                            <span>暂按……（GA必选）</span>
+                        </div>
+                        <div class="switch-group">
+                            <input type="checkbox" id="cleanUp">
+                            <span>有维护模板，按……（仅小作品）</span>
+                        </div>
                     </div>
 
                     <div class="input-group" id="templateTypeSelection">
@@ -1159,6 +1171,9 @@
             const templateTypeSelection = document.getElementById('templateTypeSelection');
             const templateType = document.getElementById('templateType');
             const pageCount = document.getElementById('linkCount');
+            const tempUse=document.getElementById('tempUse');
+            const cleanUp=document.getElementById('cleanUp');
+            const InsertWords=document.getElementById('InsertWords');
 
 
             // 初始化计算
@@ -1210,6 +1225,10 @@
             political.addEventListener('change', calculateScore);
             common.addEventListener('change', calculateScore);
             position.addEventListener('change', calculateScore);
+            tempUse.addEventListener('change', calculateScore);
+            cleanUp.addEventListener('change', calculateScore);
+            pageCount.addEventListener('input', calculateScore);
+            templateType.addEventListener('change', calculateScore);
 
             function calculateScore() {
                 // 获取输入值
@@ -1236,7 +1255,7 @@
                         baseScore = 1;
                         wordThreshold = 1000;
                         break;
-                    case '暂定GA':
+                    case 'GA':
                         baseScore = 3;
                         wordThreshold = 10000;
                         break;
@@ -1250,11 +1269,24 @@
                         baseScore = 0;
                         wordThreshold = 0;
                 }
+                if(baseScore===3){
+                    tempUse.checked=1;
+                    tempUse.disabled=1;
+                }else{
+                    tempUse.disabled=0;
+                }
+                if(baseScore!==0.5){
+                    cleanUp.disabled=1;
+                }else{
+                    cleanUp.disabled=0;
+                }
                 if(baseScore===-1){ // 列表特殊处理
                     multiplierButtonClass.style.display='none'; // 隐藏乘数按钮
                     templateType.disabled=true; // 禁用模板类型选择
                     imgCount.disabled=true; // 禁用图片输入
                     wordCount.disabled=false; // 启用字数输入
+                    InsertWords.style.display='none';
+                    pageCount.disabled=true;
                     if(words<500){
                         baseScore=0.5;
                     }else if(words<2000){
@@ -1274,6 +1306,7 @@
                     imgCount.disabled=true; // 禁用图片输入
                     pageCount.disabled=false; // 启用链入页面输入
                     wordCount.disabled=true; // 禁用字数输入
+                    InsertWords.style.display='none';
                     if (selectedTemplateType==='信息框模板') {
                         if (pageCount.value>=3 && pageCount.value<5) {
                             baseScore=1;
@@ -1312,6 +1345,7 @@
                     imgCount.disabled=false; // 启用图片输入
                     pageCount.disabled=true; // 禁用链入页面输入
                     wordCount.disabled=false; // 启用字数输入
+                    InsertWords.style.display='block';
                 }
 
                 // 计算字数奖励
@@ -1337,7 +1371,10 @@
 
                 // 生成按顺序输出的内容
                 const flooredWords = Math.floor(words/100.0)*100;
-                let outputArray = [type, `${flooredWords}字`];
+                let prefix_type="";
+                if(tempUse.checked)prefix_type="暂按";
+                if(cleanUp.checked)prefix_type="有维护模板，按";
+                let outputArray = [prefix_type+type, `${flooredWords}字`];
 
                 // 第三个输入：新用户（只有勾选时才体现）
                 if (isNewUser) {
