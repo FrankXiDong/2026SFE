@@ -1032,8 +1032,24 @@
             templates.forEach(template => {
                 const templateElement = document.createElement('div');
                 templateElement.className = 'template-item';
+                // 处理[[xx|display]]格式，并保留[[xxx]]之外的其他内容
+                let displayName = template.entryName || 'Unknown';
+                let fullEntryName = template.entryName || 'Unknown';
+                let linkName = displayName;
+                
+                if (displayName.startsWith('[[') && displayName.endsWith(']]')) {
+                    // 提取[[ ]]内的内容
+                    let innerContent = displayName.slice(2, -2);
+                    linkName = innerContent;
+                    // 如果有管道符，只取管道符前的部分作为链接
+                    if (innerContent.includes('|')) {
+                        linkName = innerContent.split('|')[0];
+                    }
+                    // 保持完整的显示名称（包括管道符后的内容）
+                    displayName = innerContent;
+                }
                 const entry_name = template.entryName && template.entryName.startsWith('[[') && template.entryName.endsWith(']]')
-                    ? `- 条目：<a href="https://www.qiuwenbaike.cn/wiki/${template.entryName.slice(2, -2)}" target="_blank">${template.entryName.slice(2, -2)}</a>, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`
+                    ? `- 条目：<a href="https://www.qiuwenbaike.cn/wiki/${linkName}" target="_blank">${displayName}</a>, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`
                     : `- 条目：${template.entryName || 'Unknown'}, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`;
                 templateElement.innerHTML = `
                     <div class="template-header">
