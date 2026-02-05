@@ -627,6 +627,7 @@
                             <option value="DYK">DYK（基础分: 1）</option>
                             <option value="暂定GA">暂定GA（基础分: 3）</option>
                             <option value="list">列表</option>
+                            <option value="模板">模板</option>
                         </select>
                     </div>
                     
@@ -635,6 +636,19 @@
                         <input type="number" id="wordCount" min="0" step="100" placeholder="请输入字数">
                         <h3><i class="fas fa-image"></i> 图片个数</h3>
                         <input type="number" id="imgCount" min="0" step="1" value="0" placeholder="请输入图片个数">
+                        <h3><i class="fas fa-image"></i> 链入页面数</h3>
+                        <input type="number" id="linkCount" min="0" step="1" value="0" placeholder="请输入链入页面数（即被几个页面使用、嵌入）">
+                    </div>
+
+                    <div class="input-group" id="templateTypeSelection">
+                        <h3><i class="fas fa-code"></i> 模板类型</h3>
+
+                        <select id="templateType"> 
+                            <option value="">请选择模板类型</option>
+                            <option value="信息框模板">信息框（Infobox类）</option>
+                            <option value="导航模板">导航（Navbox类）</option>
+                        </select>
+
                     </div>
                     
                     <div class="input-group" id="multiplierSelection">
@@ -1125,6 +1139,11 @@
             const finalScore = document.getElementById('finalScore');
             const sequentialOutput = document.getElementById('sequentialOutput');
             const multiplierButtonClass=document.getElementById('multiplierSelection');
+            const multiplierSelection = document.getElementById('multiplierSelection');
+            const templateTypeSelection = document.getElementById('templateTypeSelection');
+            const templateType = document.getElementById('templateType');
+            const pageCount = document.getElementById('linkCount');
+
 
             // 初始化计算
             calculateScore();
@@ -1196,7 +1215,7 @@
                     case '小作品':
                         baseScore = 0.5;
                         wordThreshold = 300;
-                        break;
+                        break; // 退出 switch 块
                     case 'DYK':
                         baseScore = 1;
                         wordThreshold = 1000;
@@ -1208,13 +1227,18 @@
                     case 'list':
                         baseScore = -1;
                         break;
+                    case '模板':
+                        baseScore = 0;
+                        break;
                     default:
                         baseScore = 0;
                         wordThreshold = 0;
                 }
-                if(baseScore===-1){
-                    multiplierButtonClass.style.display='none';
-                    imgCount.disabled=true;
+                if(baseScore===-1){ // 列表特殊处理
+                    multiplierButtonClass.style.display='none'; // 隐藏乘数按钮
+                    templateType.disabled=true; // 禁用模板类型选择
+                    imgCount.disabled=true; // 禁用图片输入
+                    wordCount.disabled=false; // 启用字数输入
                     if(words<500){
                         baseScore=0.5;
                     }else if(words<2000){
@@ -1223,11 +1247,55 @@
                         baseScore=2.5;
                     }
                     sequentialOutput.textContent = `列表；${Math.floor(words/100.0)*100}字`;
-                    finalScore.textContent = baseScore.toFixed(5);
+                    finalScore.textContent = baseScore.toFixed(5); // 显示最终得分
                     return;
-                }else{
-                    multiplierButtonClass.style.display='block';
-                    imgCount.disabled=false;
+                }
+                else if(type==='模板'){
+                    multiplierButtonClass.style.display='none'; // 隐藏乘数按钮
+                    templateType.style.display='block'; // 显示模板类型选择
+                    templateType.disabled=false; // 启用模板类型选择
+                    const selectedTemplateType = templateType.value;
+                    imgCount.disabled=true; // 禁用图片输入
+                    pageCount.disabled=false; // 启用链入页面输入
+                    wordCount.disabled=true; // 禁用字数输入
+                    if (selectedTemplateType==='信息框模板') {
+                        if (pageCount.value>=3 && pageCount.value<5) {
+                            baseScore=1;
+                        }
+                        else if (pageCount.value>=5 && pageCount.value<15) {
+                            baseScore=1.5;
+                        }
+                        else if (pageCount.value>=15 && pageCount.value<50) {
+                            baseScore=2.5;
+                        }
+                        else if (pageCount.value>=50) {
+                            baseScore=3.5;
+                        }
+                    }
+                    else if (selectedTemplateType==='导航模板') {
+                        if (pageCount.value>=3 && pageCount.value<10) {
+                            baseScore=0.5;
+                        }
+                        else if (pageCount.value>=10 && pageCount.value<30) {
+                            baseScore=1;
+                        }
+                        else if (pageCount.value>=30 && pageCount.value<80) {
+                            baseScore=1.5;
+                        }
+                        else if (pageCount.value>=80) {
+                            baseScore=3;
+                        }
+                    }
+                    sequentialOutput.textContent = `${selectedTemplateType};共${pageCount.value}个页面使用`;
+                    finalScore.textContent = baseScore.toFixed(5); // 显示最终得分
+                    return;
+                }
+                else{
+                    multiplierButtonClass.style.display='block'; // 显示乘数按钮
+                    templateType.disabled=true; // 禁用模板类型选择
+                    imgCount.disabled=false; // 启用图片输入
+                    pageCount.disabled=true; // 禁用链入页面输入
+                    wordCount.disabled=false; // 启用字数输入
                 }
 
                 // 计算字数奖励
