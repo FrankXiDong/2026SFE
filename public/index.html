@@ -625,7 +625,7 @@
                         <select id="entryType">
                             <option value="小作品">小作品（基础分: 0.5）</option>
                             <option value="DYK">DYK（基础分: 1）</option>
-                            <option value="GA">GA（基础分: 3）</option>
+                            <option value="暂定GA">暂定GA（基础分: 3）</option>
                             <option value="list">列表</option>
                         </select>
                     </div>
@@ -1201,10 +1201,9 @@
                         baseScore = 1;
                         wordThreshold = 1000;
                         break;
-                    case 'GA':
+                    case '暂定GA':
                         baseScore = 3;
                         wordThreshold = 10000;
-                        type='暂定GA';
                         break;
                     case 'list':
                         baseScore = -1;
