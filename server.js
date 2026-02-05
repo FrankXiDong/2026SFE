@@ -252,11 +252,15 @@ async function finishReviewProcess(content) {
 
         await updatePagesFromJson(bot, newContent);
 
-        console.log(pc.green('[SUCCESS] 所有页面更新完成，开始更新总排行榜...'));
+        console.log(pc.green('[SUCCESS] 所有页面更新完成'));
+
+        /* 
+        console.log(pc.blue('[INFO] 启动总排行榜更新...'));
         HYYY_bot.main().catch(e => {
             console.error(pc.red('[FATAL] 总排行榜更新失败:'), e);
             process.exit(1);
         });// 运行HYYY_bot代码
+        */
 
     } catch (e) {
         console.error(pc.red('[FATAL] 完成审核过程失败:'), e);
