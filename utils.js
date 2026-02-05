@@ -168,6 +168,47 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
 }
 
 /**
+ * 在wikitext的</noinclude>和<noinclude>之间添加新条目
+ * 注意：寻找第一个</noinclude>和其后的第一个<noinclude>之间的区域
+ * @param {string} originalWikitext - 原始wikitext
+ * @param {string} addItem - 要添加的条目内容
+ * @returns {string} 添加后的wikitext
+ */
+function addItemBetweenNoinclude(originalWikitext, addItem) {
+    // 找到第一个</noinclude>的位置
+    const endNoincludeIndex = originalWikitext.indexOf('</noinclude>');
+    if (endNoincludeIndex === -1) {
+        // 如果没有找到</noinclude>，直接返回原始内容
+        return originalWikitext;
+    }
+    
+    // 从</noinclude>之后开始查找第一个<noinclude>
+    const startNoincludeIndex = originalWikitext.indexOf('<noinclude>', endNoincludeIndex);
+    if (startNoincludeIndex === -1) {
+        // 如果没有找到<noinclude>，直接返回原始内容
+        return originalWikitext;
+    }
+    
+    // 计算插入区域的位置
+    const insertStart = endNoincludeIndex + '</noinclude>'.length;
+    
+    // 获取插入区域的内容
+    let areaContent = originalWikitext.substring(insertStart, startNoincludeIndex);
+    
+    // 在区域内容末尾添加新条目，确保换行
+    if (areaContent.length > 0 && !areaContent.endsWith('\n')) {
+        areaContent += '\n';
+    }
+    areaContent += addItem + '\n';
+    
+    // 重新组合wikitext
+    return originalWikitext.substring(0, insertStart) + 
+           areaContent + 
+           originalWikitext.substring(startNoincludeIndex);
+}
+
+
+/**
  * Updates the mbox in the user page wikitext.
  */
 function updateUserPageContent(wikitext, count, score) {
