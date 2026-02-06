@@ -650,6 +650,10 @@
                             <input type="checkbox" id="cleanUp">
                             <span>有维护模板，按……（仅小作品）</span>
                         </div>
+                        <div class="switch-group">
+                            <input type="checkbox" id="starOpt">
+                            <span>原条目修改，标记井号（<sup>#</sup>）</span>
+                        </div>
                     </div>
 
                     <div class="input-group" id="templateTypeSelection">
@@ -1174,6 +1178,7 @@
             const tempUse=document.getElementById('tempUse');
             const cleanUp=document.getElementById('cleanUp');
             const InsertWords=document.getElementById('InsertWords');
+            const starOpt=document.getElementById('starOpt');
 
 
             // 初始化计算
@@ -1229,6 +1234,7 @@
             cleanUp.addEventListener('change', calculateScore);
             pageCount.addEventListener('input', calculateScore);
             templateType.addEventListener('change', calculateScore);
+            starOpt.addEventListener('change', calculateScore);
 
             function calculateScore() {
                 // 获取输入值
@@ -1374,6 +1380,7 @@
                 let prefix_type="";
                 if(tempUse.checked)prefix_type="暂按";
                 if(cleanUp.checked)prefix_type="有维护模板，按";
+                if(starOpt.checked)prefix_type+='#'; // 用于回传消息，实际不添加
                 let outputArray = [prefix_type+type, `${flooredWords}字`];
 
                 // 第三个输入：新用户（只有勾选时才体现）

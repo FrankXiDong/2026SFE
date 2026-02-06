@@ -155,7 +155,7 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
 
                 // 不保留原始备注。若提供 newRemark 则添加，否则不添加备注。
                 if (item.newRemark) {
-                    return newTemplate + `<br/><small>（${item.newRemark}）</small>`;
+                    return newTemplate + `<br/><small>（${item.newRemark.replace('#','')}）</small>`;
                 } else if(remarkFull) {
                     return newTemplate+ remarkFull; // 保留原始备注
                 }else return newTemplate;
