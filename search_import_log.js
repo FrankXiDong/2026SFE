@@ -103,7 +103,7 @@ async function main() {
         console.error(pc.red('[FATAL] 初始化失败或认证无效:'), e);
         process.exit(1);
     }
-    username = '叮咚叮咚';
+    username = '待春';
     namespaces = [0,6,10,206,828];
     let score = 0;
     for (const namespace0 of namespaces) { 
@@ -121,9 +121,9 @@ async function main() {
             "lelimit": "max"
         };
 
-        const signlist = await bot.request(
-            params = defaultJson
-        )
+        const signlist = await bot.request(defaultJson).catch((e) => { 
+            console.error(pc.red('[FATAL] 获取日志列表失败:'), e);
+        });
         const loglist = signlist.query.logevents;
 
         console.log(pc.blue(`[INFO] 获取 条目命名空间 ${namespace0} 的日志列表成功，共 ${loglist.length} 条日志`));
