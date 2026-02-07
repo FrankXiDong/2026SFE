@@ -37,10 +37,12 @@ function parseContributionPageWithDetails(wikitext) {
         
         if (inTable) {
             // 过滤：排除导入综述行（通常包含 Special:日志 和 type=import）
+            /* 
             if (line.includes('type=import') && (line.includes('Special:日志') || line.includes('Special:Log'))) {
                 currentLineNumber++;
                 continue;
             }
+            */
 
             // 查找条目名称（通常是表格行的第一列，即 | 符号后的文本）
             let entryName = '';
