@@ -103,7 +103,7 @@ async function main() {
         console.error(pc.red('[FATAL] 初始化失败或认证无效:'), e);
         process.exit(1);
     }
-    username = '待春';
+    username = 'Nice Nature';
     namespaces = [0,6,10,206,828];
     let score = 0;
     for (const namespace0 of namespaces) { 
@@ -135,6 +135,8 @@ async function main() {
             score += loglist.length * 0.01;
         }
     }
+    // 保留五位小数
+    score = score.toFixed(5);
     console.log(pc.green(`[INFO] 总分: ${score}`));
 }
 
