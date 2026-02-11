@@ -104,79 +104,9 @@ async function main() {
         process.exit(1);
     }
 
-    /* const signlist = await bot.read('Qiuwen:2026年春节编辑松/报名/名单')
-    const usernames = extractUsernames(signlist.revisions[0].content); */
-    const usernames = [
-  "LH44",
-  "叮咚叮咚",
-  "Hcx2012", 
-  "Langqiao",
-  "冬梦雨",
-  "Nice Nature",
-  "Kiss琪亚娜酱~",
-  "瀚海狂客",
-  "YuChein",
-  "キイロピタヤ",
-  "羽落零音",
-  "Qingwen",
-  "没有羽翼的格雷塔",
-  "Abigpigeon",
-  "神萌虎",
-  "千里走单骑",
-  "TFX202X",
-  "铁桶",
-  "知微行远",
-  "IntegerSequences",
-  "Lemonade",
-  "蓝斑鸠",
-  "SolidBlock",
-  "HHHTBJ",
-  "Wa-tim",
-  "伞月亭",
-  "待春",
-  "超威蓝猫",
-  "ABCXYZ",
-  "Bourbaki",
-  "饮泉思源",
-  "詹天佑二世",
-  "Jdz4045",
-  "Kiraclyne",
-  "末影橘子",
-  "Yui",
-  "Diana Katerina Jones",
-  "Xigma",
-  "A-pigeon",
-  "柳麟谔",
-  "Yoku",
-  "BugCatcher",
-  "欧阳狮子",
-  "THUargwliu",
-  "Studyrat",
-  "MeowColumn",
-  "Zyz2026",
-  "Vikarna",
-  "Linxiaonuan",
-  "Zhujianfei",
-  "冀有陉鲜事儿②",
-  "Lily White",
-  "SaoMikoto",
-  "Gjm",
-  "初尘",
-  "Mai",
-  "敝之鱼",
-  "Littleparrot",
-  "Luxra",
-  "纯爱战神",
-  "漆皮先生",
-  "4O74Y74L74J7",
-  "Jim Zhang",
-  "雨幡悬停",
-  "希羽岚",
-  "MartianReunion",
-  "Qinhex",
-  "因为重名没有昵称",
-  "江左梅郎"
-];
+    const signlist = await bot.read('Qiuwen:2026年春节编辑松/报名/名单')
+    const usernames = extractUsernames(signlist.revisions[0].content);
+
     console.log(pc.blue(`[INFO] 提取到 ${usernames.length} 个用户名: ${usernames.join(', ')}`));
 
     let userlist = [];
@@ -278,13 +208,15 @@ async function main() {
 }
 
 function extractUsernames(wikitext) {
+    // 使用更简单直接的方法：先匹配所有用户名，然后过滤掉包含斜杠的
     const pattern = /\[\[(?:User|U|User talk|UT|特殊:用户贡献|特殊:用户页|User_talk|用户):([^\]|#<]+)(?:[^\[\]]*?)\]\]/gi;
     const usernames = new Set();
     let match;
     
     while ((match = pattern.exec(wikitext)) !== null) {
         const username = match[1].trim();
-        if (username) {
+        // 排除包含斜杠的用户名（用户页子页面）
+        if (username && !username.includes('/')) {
             usernames.add(username);
         }
     }
