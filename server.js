@@ -275,10 +275,21 @@ const express = require('express')
 //创建web服务器
 const app=express()
 app.use(express.static('public'));
+
+// 增加body-parser配置，解决PayloadTooLargeError问题
+app.use(express.json({ 
+    limit: '50mb',
+    type: 'application/json'
+}));
+app.use(express.urlencoded({ 
+    limit: '50mb',
+    extended: true 
+}));
+
 //将文件部署到服务器
 // 通过app.listen进行服务器的配置，并启动服务器，接收两个配置参数，一个是对应的端口号，一个是启动成功的回调函数
 //get接口的开发
-app.use(express.json());
+
 const bot = new Mwn({
     apiUrl: config.apiUrl,
     userAgent: config.userAgent,
@@ -287,13 +298,15 @@ const bot = new Mwn({
         maxlag: 5 
     }
 });
-app.get('/api/list',async (err,res)=>{
+
+app.get('/api/list',async (req,res)=>{
     const data = await startReviewProcess();
     res.send({
         code:200,
         data:JSON.stringify(data, null, 2)
     })
 })
+
 app.post('/api/push', async (req, res) => {
     try {
         const inp = req.body['content'];
@@ -324,7 +337,10 @@ app.post('/api/push', async (req, res) => {
         });
     }
 });
-app.get('/',)
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+})
 
 app.listen(2026,()=>{
     console.log('服务器启动成功，运行于http://localhost:2026');
