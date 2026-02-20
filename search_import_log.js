@@ -103,8 +103,8 @@ async function main() {
         console.error(pc.red('[FATAL] 初始化失败或认证无效:'), e);
         process.exit(1);
     }
-    username = 'Nice Nature';
-    namespaces = [0,6,10,206,828];
+    username = '叮咚叮咚';
+    namespaces = [0,6,10,14,206,828];
     let score = 0;
     for (const namespace0 of namespaces) { 
         const defaultJson = {
@@ -117,7 +117,7 @@ async function main() {
             "leend": new Date().toISOString(),
             "ledir": "newer",
             "leuser": username,
-            "lenamespace": namespace0, // 条目命名空间
+            "lenamespace": namespace0, // node search_import_log.js
             "lelimit": "max"
         };
 
