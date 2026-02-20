@@ -685,7 +685,7 @@
                             <div class="checkbox-group">
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="political" value="2">
-                                    <label for="political">关于中国政治概念、近现代史的条目（2x）</label>
+                                    <label for="political">涉及意识形态的条目（2x）</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="common" value="2.2">
@@ -1393,7 +1393,7 @@
                 let spearr=[];
                 if (position.checked) spearr.push("白区对应条目有严重立场问题");
                 if (common.checked) spearr.push("在6个参考书里4个及以上存在对应词条");
-                if (political.checked) spearr.push("中国政治/近现代史条目");
+                if (political.checked) spearr.push("涉意识形态");
                 specialCategory=spearr.join("；")
 
                 if (specialCategory) {
