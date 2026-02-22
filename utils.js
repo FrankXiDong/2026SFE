@@ -111,9 +111,16 @@ function parseContributionPageWithDetails(wikitext) {
  * 使用更精确的替换方法，基于行号和模板索引，确保模板替换准确无误
  */
 function updatePageContentWithTemplates(originalWikitext, updatedItems) {
-    const lines = originalWikitext.replace(/\n\|(?!-)/g, '||').replace(/\n\|(?!-)/g, '||').replaceAll('|-|', '|-\n').split('\n').map(line => line.replaceAll('||}','\n|}'));
+    // 修复：移除重复的正则表达式，修正转义错误
+    const lines = originalWikitext
+        .replace(/\n\|(?!-)/g, '||')  // 修正：使用单个反斜杠
+        .replaceAll('|-|', '|-\n')
+        .split('\n')
+        .map(line => line.replaceAll('||}', '\n|}'));
+    
     const processedLines = [...lines]; // 创建行的副本以进行修改
 
+    // 按行号组织更新项
     const itemsByLine = {};
     updatedItems.forEach(item => {
         if (!itemsByLine[item.lineNumber]) {
@@ -122,31 +129,35 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
         itemsByLine[item.lineNumber].push(item);
     });
 
-    // 使用正则一次性匹配模板以及可能存在的备注段（捕获整个 <br/><small>...</small>），按匹配序号替换
-    // 支持空分数参数（如 |}} 或 |<空>}}），并捕获分数原始字符串以便保留
+    // 使用正则一次性匹配模板以及可能存在的备注段
+    // 支持空分数参数，并捕获分数原始字符串以便保留
     const statusWithRemarkRegex = /\{\{2026SFEditasonStatus\|([^|}]*)(?:\|([^}]*))?\}\}((?:<br\s*\/?\>\s*<small>.*?<\/small>)?)/g;
 
     for (const [lineNumStr, lineItems] of Object.entries(itemsByLine)) {
         const lineNum = parseInt(lineNumStr);
-        if (lineNum < processedLines.length) {
+        // 修复：确保行号在有效范围内
+        if (lineNum >= 0 && lineNum < processedLines.length) {
             let currentLine = processedLines[lineNum];
 
+            // 按模板索引排序，确保替换顺序正确
             lineItems.sort((a, b) => (a.templateIndex || 0) - (b.templateIndex || 0));
 
+            // 创建模板索引映射
             const itemsMap = {};
-            for (const it of lineItems) {
-                itemsMap[it.templateIndex || 0] = it;
-            }
+            lineItems.forEach((item, index) => {
+                itemsMap[index] = item;  // 使用数组索引而不是templateIndex
+            });
 
             let matchCounter = 0;
             currentLine = currentLine.replace(statusWithRemarkRegex, (fullMatch, status, scoreCaptured, remarkFull) => {
                 const item = itemsMap[matchCounter++];
                 if (!item) return fullMatch;
 
+                // 确定状态值
                 const useStatus = item.newStatus !== undefined ? item.newStatus : (item.status !== undefined ? item.status : status);
                 let newTemplate = `{{2026SFEditasonStatus|${useStatus}`;
 
-                // 决定分数字符串：优先使用 item.newScore（可能为数字或空字符串），否则保留原始捕获（可能为 undefined 或空字符串）
+                // 处理分数参数
                 if (item.newScore !== undefined) {
                     newTemplate += `|${item.newScore}`;
                 } else if (scoreCaptured !== undefined) {
@@ -155,12 +166,17 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
 
                 newTemplate += '}}';
 
-                // 不保留原始备注。若提供 newRemark 则添加，否则不添加备注。
+                // 处理备注
                 if (item.newRemark) {
+                    // 添加新的备注
                     return newTemplate + `<br/><small>（${item.newRemark.replace('#','')}）</small>`;
-                } else if(remarkFull) {
-                    return newTemplate+ remarkFull; // 保留原始备注
-                }else return newTemplate;
+                } else if (remarkFull) {
+                    // 保留原始备注
+                    return newTemplate + remarkFull;
+                } else {
+                    // 无备注
+                    return newTemplate;
+                }
             });
 
             processedLines[lineNum] = currentLine;
