@@ -158,7 +158,7 @@ function updatePageContentWithTemplates(originalWikitext, updatedItems) {
                 let newTemplate = `{{2026SFEditasonStatus|${useStatus}`;
 
                 // 处理分数参数
-                if (item.newScore !== undefined) {
+                if (item.newScore !== "") {
                     newTemplate += `|${item.newScore}`;
                 } else if (scoreCaptured !== undefined) {
                     newTemplate += `|${scoreCaptured}`;
