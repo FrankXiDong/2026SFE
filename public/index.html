@@ -1047,25 +1047,35 @@
             templates.forEach(template => {
                 const templateElement = document.createElement('div');
                 templateElement.className = 'template-item';
-                // 处理[[xx|display]]格式，并保留[[xxx]]之外的其他内容
+                // 处理包含[[xxx]]/[[xx|display]]且前后有其他内容的entryName
                 let displayName = template.entryName || 'Unknown';
                 let fullEntryName = template.entryName || 'Unknown';
-                let linkName = displayName;
-                
-                if (displayName.startsWith('[[') && displayName.endsWith(']]')) {
-                    // 提取[[ ]]内的内容
-                    let innerContent = displayName.slice(2, -2);
-                    linkName = innerContent;
-                    // 如果有管道符，只取管道符前的部分作为链接
-                    if (innerContent.includes('|')) {
-                        linkName = innerContent.split('|')[0];
-                    }
-                    // 保持完整的显示名称（包括管道符后的内容）
-                    displayName = innerContent;
+                let entry_name = '';
+
+                // 正则表达式：匹配所有[[...]]格式的内容，支持|分隔的显示名
+                // 正则说明：
+                // \[\[ 匹配开头的[[
+                // ([^\]]+?) 非贪婪匹配|前的链接部分（避免匹配到后面的]]）
+                // (?:\|([^\]]+?))? 可选的|和显示名部分（非捕获组）
+                // \]\] 匹配结尾的]]
+                const linkRegex = /\[\[([^\]]+?)(?:\|([^\]]+?))?\]\]/g;
+
+                // 检查是否包含[[...]]链接格式
+                if (linkRegex.test(fullEntryName)) {
+                    // 替换所有[[...]]链接为<a>标签，保留其他内容
+                    const formattedEntry = fullEntryName.replace(linkRegex, (match, linkPart, displayPart) => {
+                        // 链接名：取|前的部分；显示名：有|则取|后，无则取linkPart
+                        const finalLinkName = linkPart.trim();
+                        const finalDisplayName = displayPart ? displayPart.trim() : finalLinkName;
+                        // 生成带链接的HTML
+                        return `<a href="https://www.qiuwenbaike.cn/wiki/${finalLinkName}" target="_blank">${finalDisplayName}</a>`;
+                    });
+                    // 拼接最终的条目行（保留所有非链接内容）
+                    entry_name = `- 条目：${formattedEntry}, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`;
+                } else {
+                    // 无[[...]]格式，按原逻辑处理
+                    entry_name = `- 条目：${displayName}, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`;
                 }
-                const entry_name = template.entryName && template.entryName.startsWith('[[') && template.entryName.endsWith(']]')
-                    ? `- 条目：<a href="https://www.qiuwenbaike.cn/wiki/${linkName}" target="_blank">${displayName}</a>, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`
-                    : `- 条目：${template.entryName || 'Unknown'}, 页面：<a href="https://www.qiuwenbaike.cn/wiki/${template.page || 'Unknown'}" target="_blank">${template.page || 'Unknown'}</a>\n`;
                 templateElement.innerHTML = `
                     <div class="template-header">
                         <span>${entry_name}</span>
