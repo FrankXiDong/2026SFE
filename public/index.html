@@ -1085,7 +1085,7 @@
                             <label>分数：</label>
                             <input type="number" step="0.1" min="0" class="score-input" value="${template.newScore !== undefined ? template.newScore : template.score}" 
                                    onchange="updateTemplateScore(${template.id}, this.value)" id="scoreInput${template.id}"
-                                   ${(template.newStatus || template.status) !== 'pass' && (template.newStatus || template.status) !== '通过' ? 'disabled' : ''}>
+                                   ${(template.newStatus || template.status) !== 'pass' && (template.newStatus || template.status) === 'pending' ? 'disabled' : ''}>
                         </div>
                         <div class="control-group">
                             <label>备注：</label>
@@ -1413,7 +1413,7 @@
             
             // 如果状态变为通过，启用分数输入框；如果是拒绝或待审核，禁用分数输入框
             const scoreInput = document.getElementById(`scoreInput${templateId}`);
-            if (newStatus === 'pass' || newStatus === '通过') {
+            if (newStatus !== 'pending') {
                 scoreInput.disabled = false;
             } else {
                 scoreInput.disabled = true;
